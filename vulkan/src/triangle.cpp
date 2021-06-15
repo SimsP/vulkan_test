@@ -27,6 +27,16 @@ void HelloTriangleApp::createInstance() {
     createInfo.ppEnabledExtensionNames = glfwExtensions;
     createInfo.enabledLayerCount = 0;
 
+    //check for validationLayer support
+    if (_enableValidationLayers) {
+        if (!checkValidationSupport()){
+            throw std::runtime_error("validation layers requested, but not available");
+        }
+        createInfo.enabledLayerCount = static_cast<uint32_t>(_validationLayers.size());
+        createInfo.ppEnabledLayerNames = _validationLayers.data();
+    }
+
+
     // check for extension support
     // uint32_t extensionCount = 0;
     // vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -36,10 +46,6 @@ void HelloTriangleApp::createInstance() {
     // for (const auto& extension : extensions) {
     //     std::cout << '\t' << extension.extensionName << '\n';
     // }
-
-    if (_enableValidationLayers && !checkValidationSupport()) {
-        throw std::runtime_error("validation layers requested, but not available");
-    }
 
     if(vkCreateInstance(&createInfo, nullptr, &_instance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
