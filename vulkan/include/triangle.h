@@ -1,10 +1,16 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 #include <cstdlib>
 #include <vector>
 #include <vulkan/vulkan.h>
 
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                    VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                    void* pUserData);
 class HelloTriangleApp {
 public:
     HelloTriangleApp(uint32_t width, uint32_t height) : _width(width), _height(height) {}
@@ -24,7 +30,7 @@ private:
     void createInstance();
 
     bool checkValidationSupport();
-
+    std::vector<const char*> getRequiredExtensions();
     GLFWwindow* _window;
     VkInstance _instance;
     uint32_t  _width = 800;
