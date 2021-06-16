@@ -34,6 +34,7 @@ private:
     std::vector<const char*> getRequiredExtensions();
 
     void pickPhysicalDevice();
+    void createLogicalDevice();
 
     GLFWwindow* _window;
     VkInstance _instance;
@@ -45,7 +46,9 @@ private:
         "VK_LAYER_KHRONOS_validation"
     };
 
-    VkPhysicalDevice _device = VK_NULL_HANDLE;
+    VkPhysicalDevice _physical_device = VK_NULL_HANDLE;
+    VkDevice _device;
+    VkQueue _graphicsQueue;
 
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;

@@ -152,11 +152,11 @@ void HelloTriangleApp::pickPhysicalDevice() {
 
     for (const auto& device : devices) {
         if(checkSuitableDevices(device)){
-            _device = device;
+            _physical_device = device;
             break;
         }
     }
-    if (_device == VK_NULL_HANDLE) {
+    if (_physical_device == VK_NULL_HANDLE) {
         throw std::runtime_error("no suitable Vulkan device found");
     }
 }
@@ -166,6 +166,7 @@ void HelloTriangleApp::initVulkan() {
     setupDebugMessenger();
 
     pickPhysicalDevice();
+    createLogicalDevice();
 }
 
 void HelloTriangleApp::mainLoop() {
@@ -179,7 +180,7 @@ void HelloTriangleApp::cleanup() {
     if (_enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(_instance, _debugMessenger, nullptr);
     }
-
+    vkDestroyDevice(_device, nullptr);
     vkDestroyInstance(_instance, nullptr);
     glfwDestroyWindow(_window);
     glfwTerminate();
@@ -206,4 +207,27 @@ bool HelloTriangleApp::checkValidationSupport() {
         }
     }
     return true;
+}
+
+void HelloTriangleApp::createLogicalDevice() {
+    QueueFamilyIndices index = findQueueFamilies(_physical_device);
+    VkDeviceQueueCreateInfo queueCreateInfo {};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = index.graphicsFamily.value();
+    queueCreateInfo.queueCount = 1;
+    float queuePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures {};
+
+    VkDeviceCreateInfo createInfo {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pEnabledFeatures = &deviceFeatures;
+
+    if (vkCreateDevice(_physical_device, &createInfo, nullptr, &_device) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create logical device");
+    }
+    vkGetDeviceQueue(_device, index.graphicsFamily.value(), 0, &_graphicsQueue);
 }
