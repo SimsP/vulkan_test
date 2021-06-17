@@ -16,6 +16,12 @@ struct QueueFamilyIndices {
     }
 };
 
+struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+};
+
 class HelloTriangleApp {
 public:
     HelloTriangleApp(uint32_t width, uint32_t height) : _width(width), _height(height) {}
@@ -39,10 +45,14 @@ private:
     std::vector<const char*> getRequiredExtensions();
 
     void pickPhysicalDevice();
+    bool checkSuitableDevices(VkPhysicalDevice device);
+    bool checkDeviceExtensionsSupport(VkPhysicalDevice device);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     void createLogicalDevice();
 
     void createSurface();
+
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
     GLFWwindow* _window;
     VkInstance _instance;
@@ -52,6 +62,10 @@ private:
 
     std::vector<const char*> _validationLayers = {
         "VK_LAYER_KHRONOS_validation"
+    };
+
+    std::vector<const char*> _deviceExtensions = {
+        "VK_KHR_SWAPCHAIN_EXTENSION_NAME"
     };
 
     VkPhysicalDevice _physical_device = VK_NULL_HANDLE;

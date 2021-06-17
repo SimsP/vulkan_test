@@ -60,15 +60,37 @@ QueueFamilyIndices  HelloTriangleApp::findQueueFamilies(VkPhysicalDevice device)
     return indices;
 }
 
-bool checkSuitableDevices(VkPhysicalDevice device) {
+bool HelloTriangleApp::checkSuitableDevices(VkPhysicalDevice device) {
     VkPhysicalDeviceProperties deviceProperties;
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
+    bool extensionsSupported = checkDeviceExtensionsSupport(device);
+    bool swapChainSuitable = false;
+
+    if(extensionsSupported) {
+        SwapChainSupportDetails details = querySwapChainSupport(device);
+        swapChainSuitable = !details.formats.empty() && !details.presentModes.empty();
+    }
+
     QueueFamilyIndices index = findQueueFamilies(device);
     return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-            deviceFeatures.geometryShader && index.isComplete();
+            deviceFeatures.geometryShader && index.isComplete() && extensionsSupported && swapChainSuitable;
+}
+
+bool HelloTriangleApp::checkDeviceExtensionsSupport(VkPhysicalDevice device) {
+    uint32_t extensionsCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionsCount, nullptr);
+    std::vector<VkExtensionProperties> availableExetensions(extensionsCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionsCount, availableExetensions.data());
+    std::set<std::string> requiredExtensions(_deviceExtensions.begin(), _deviceExtensions.end());
+
+    for (const auto& extension : availableExetensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
+
+    return requiredExtensions.empty();
 }
 
 std::vector<const char*> HelloTriangleApp::getRequiredExtensions() {
@@ -239,6 +261,8 @@ void HelloTriangleApp::createLogicalDevice() {
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(_deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = _deviceExtensions.data();
 
     if (vkCreateDevice(_physical_device, &createInfo, nullptr, &_device) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device");
@@ -252,4 +276,25 @@ void HelloTriangleApp::createSurface() {
         throw std::runtime_error("failed to create window surface");
     }
 
+}
+
+SwapChainSupportDetails HelloTriangleApp::querySwapChainSupport(VkPhysicalDevice device) {
+    SwapChainSupportDetails details;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
+
+    uint32_t formatCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, nullptr);
+    if (formatCount != 0) {
+        details.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, details.formats.data());
+    }
+
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, nullptr);
+    if (presentModeCount != 0) {
+        details.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
+    }
+
+    return details;
 }
