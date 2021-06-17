@@ -9,6 +9,11 @@
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
+
+    bool isComplete() {
+        return graphicsFamily.has_value() && presentFamily.has_value();
+    }
 };
 
 class HelloTriangleApp {
@@ -34,7 +39,10 @@ private:
     std::vector<const char*> getRequiredExtensions();
 
     void pickPhysicalDevice();
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     void createLogicalDevice();
+
+    void createSurface();
 
     GLFWwindow* _window;
     VkInstance _instance;
@@ -49,6 +57,9 @@ private:
     VkPhysicalDevice _physical_device = VK_NULL_HANDLE;
     VkDevice _device;
     VkQueue _graphicsQueue;
+    VkQueue _presentQueue;
+
+    VkSurfaceKHR _surface;
 
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;
