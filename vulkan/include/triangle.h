@@ -58,6 +58,8 @@ private:
     VkExtent2D chooseSwapExt(const VkSurfaceCapabilitiesKHR& capabilities);
     void createSwapChain();
 
+    void createImageViews();
+
     GLFWwindow* _window;
     VkInstance _instance;
     VkDebugUtilsMessengerEXT _debugMessenger;
@@ -81,7 +83,9 @@ private:
     VkSwapchainKHR _swapChain;
     std::vector<VkImage> _swapChainImages;
     VkExtent2D _swapChainExtent;
-    VkSurfaceFormatKHR _swapChainFormat
+    VkFormat _swapChainImageFormat;
+
+    std::vector<VkImageView> _swapChainImageViews;
 
 
 #ifdef NDEBUG

@@ -201,6 +201,7 @@ void HelloTriangleApp::initVulkan() {
     pickPhysicalDevice();
     createLogicalDevice();
     createSwapChain();
+    createImageViews();
 }
 
 void HelloTriangleApp::mainLoop() {
@@ -211,6 +212,9 @@ void HelloTriangleApp::mainLoop() {
 }
 
 void HelloTriangleApp::cleanup() {
+    for (auto imageView : _swapChainImageViews) {
+        vkDestroyImageView(_device, imageView, nullptr);
+    }
     vkDestroySwapchainKHR(_device, _swapChain, nullptr);
     if (_enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(_instance, _debugMessenger, nullptr);
@@ -346,7 +350,7 @@ VkExtent2D HelloTriangleApp::chooseSwapExt(const VkSurfaceCapabilitiesKHR& capab
 
 void HelloTriangleApp::createSwapChain() {
     SwapChainSupportDetails detail = querySwapChainSupport(_physical_device);
-    VkSurfaceFormatKHR _swapChainFormat = chooseSwapSurfaceFormat(detail.formats);
+    VkSurfaceFormatKHR swapChainSurfaceFormat = chooseSwapSurfaceFormat(detail.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentationMode(detail.presentModes);
     _swapChainExtent = chooseSwapExt(detail.capabilities);
 
@@ -359,8 +363,9 @@ void HelloTriangleApp::createSwapChain() {
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = _surface;
     createInfo.minImageCount = imageCount;
-    createInfo.imageFormat = _swapChainFormat.format;
-    createInfo.imageColorSpace = _swapChainFormat.colorSpace;
+    _swapChainImageFormat = swapChainSurfaceFormat.format;
+    createInfo.imageFormat = _swapChainImageFormat;
+    createInfo.imageColorSpace = swapChainSurfaceFormat.colorSpace;
     createInfo.imageExtent = _swapChainExtent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -391,4 +396,29 @@ void HelloTriangleApp::createSwapChain() {
     vkGetSwapchainImagesKHR(_device, _swapChain, &imageCount, nullptr);
     _swapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(_device, _swapChain, &imageCount, _swapChainImages.data());
+}
+
+void HelloTriangleApp::createImageViews() {
+    _swapChainImageViews.resize(_swapChainImages.size());
+    for (size_t i = 0; i < _swapChainImages.size(); ++i) {
+        VkImageViewCreateInfo createInfo {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.image = _swapChainImages[i];
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = _swapChainImageFormat;
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(_device, &createInfo, nullptr, &_swapChainImageViews[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create image views!");
+        }
+    }
 }
