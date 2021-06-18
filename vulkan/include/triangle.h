@@ -79,6 +79,10 @@ private:
 
     VkSurfaceKHR _surface;
     VkSwapchainKHR _swapChain;
+    std::vector<VkImage> _swapChainImages;
+    VkExtent2D _swapChainExtent;
+    VkSurfaceFormatKHR _swapChainFormat
+
 
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;

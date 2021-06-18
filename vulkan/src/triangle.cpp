@@ -346,9 +346,9 @@ VkExtent2D HelloTriangleApp::chooseSwapExt(const VkSurfaceCapabilitiesKHR& capab
 
 void HelloTriangleApp::createSwapChain() {
     SwapChainSupportDetails detail = querySwapChainSupport(_physical_device);
-    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(detail.formats);
+    VkSurfaceFormatKHR _swapChainFormat = chooseSwapSurfaceFormat(detail.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentationMode(detail.presentModes);
-    VkExtent2D extent = chooseSwapExt(detail.capabilities);
+    _swapChainExtent = chooseSwapExt(detail.capabilities);
 
     uint32_t imageCount = detail.capabilities.minImageCount + 1;
     if (detail.capabilities.maxImageCount > 0 && detail.capabilities.maxImageCount < imageCount) {
@@ -359,9 +359,9 @@ void HelloTriangleApp::createSwapChain() {
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = _surface;
     createInfo.minImageCount = imageCount;
-    createInfo.imageFormat = surfaceFormat.format;
-    createInfo.imageColorSpace = surfaceFormat.colorSpace;
-    createInfo.imageExtent = extent;
+    createInfo.imageFormat = _swapChainFormat.format;
+    createInfo.imageColorSpace = _swapChainFormat.colorSpace;
+    createInfo.imageExtent = _swapChainExtent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
@@ -387,4 +387,8 @@ void HelloTriangleApp::createSwapChain() {
     if (vkCreateSwapchainKHR(_device, &createInfo, nullptr, &_swapChain) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create swap-chain");
     }
+
+    vkGetSwapchainImagesKHR(_device, _swapChain, &imageCount, nullptr);
+    _swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(_device, _swapChain, &imageCount, _swapChainImages.data());
 }
