@@ -1,5 +1,7 @@
 #pragma once
 
+#include "renderer.h"
+
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <cstdlib>
@@ -26,6 +28,7 @@ class HelloTriangleApp {
 public:
     HelloTriangleApp(uint32_t width, uint32_t height) : _width(width), _height(height) {}
     ~HelloTriangleApp(){}
+    
     void run() {
         initWindow();
         initVulkan();
@@ -87,7 +90,7 @@ private:
 
     std::vector<VkImageView> _swapChainImageViews;
 
-
+    Renderer* _renderer = nullptr;
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;
 #else

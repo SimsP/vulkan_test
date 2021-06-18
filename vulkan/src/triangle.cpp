@@ -202,6 +202,8 @@ void HelloTriangleApp::initVulkan() {
     createLogicalDevice();
     createSwapChain();
     createImageViews();
+    _renderer = new Renderer(_device);
+    _renderer->createRenderPipeline();
 }
 
 void HelloTriangleApp::mainLoop() {
@@ -212,6 +214,7 @@ void HelloTriangleApp::mainLoop() {
 }
 
 void HelloTriangleApp::cleanup() {
+    delete _renderer;
     for (auto imageView : _swapChainImageViews) {
         vkDestroyImageView(_device, imageView, nullptr);
     }
