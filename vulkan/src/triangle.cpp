@@ -77,22 +77,22 @@ bool HelloTriangleApp::checkSuitableDevices(VkPhysicalDevice device) {
     }
 
     QueueFamilyIndices index = findQueueFamilies(device);
-    return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+    return  deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
             deviceFeatures.geometryShader && index.isComplete() && extensionsSupported && swapChainSuitable;
 }
 
 bool HelloTriangleApp::checkDeviceExtensionsSupport(VkPhysicalDevice device) {
     uint32_t extensionsCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionsCount, nullptr);
-    std::vector<VkExtensionProperties> availableExetensions(extensionsCount);
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionsCount, availableExetensions.data());
+    std::vector<VkExtensionProperties> availableExtensions(extensionsCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionsCount, availableExtensions.data());
     std::set<std::string> requiredExtensions(_deviceExtensions.begin(), _deviceExtensions.end());
 
-    for (const auto& extension : availableExetensions) {
+    for (const auto& extension : availableExtensions) {
         requiredExtensions.erase(extension.extensionName);
     }
 
-    return requiredExtensions.empty();
+     return requiredExtensions.empty();
 }
 
 std::vector<const char*> HelloTriangleApp::getRequiredExtensions() {
@@ -180,9 +180,11 @@ void HelloTriangleApp::pickPhysicalDevice() {
     }
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(_instance, &deviceCount, devices.data());
-
+    VkPhysicalDeviceProperties device_props;
     for (const auto& device : devices) {
         if(checkSuitableDevices(device)){
+            vkGetPhysicalDeviceProperties(device, &device_props);
+            std::cout << "using GPU[" << device_props.deviceID << "]: " << device_props.deviceName << std::endl;
             _physical_device = device;
             break;
         }
@@ -209,6 +211,7 @@ void HelloTriangleApp::mainLoop() {
 }
 
 void HelloTriangleApp::cleanup() {
+    vkDestroySwapchainKHR(_device, _swapChain, nullptr);
     if (_enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(_instance, _debugMessenger, nullptr);
     }
@@ -362,4 +365,26 @@ void HelloTriangleApp::createSwapChain() {
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
+    QueueFamilyIndices indices = findQueueFamilies(_physical_device);
+    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+    if (indices.graphicsFamily != indices.presentFamily) {
+        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        createInfo.queueFamilyIndexCount = 2;
+        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    } else {
+        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        createInfo.queueFamilyIndexCount = 0;
+        createInfo.pQueueFamilyIndices = nullptr;
+    }
+
+    createInfo.preTransform = detail.capabilities.currentTransform;
+    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = presentMode;
+    createInfo.clipped = VK_TRUE;
+    createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    if (vkCreateSwapchainKHR(_device, &createInfo, nullptr, &_swapChain) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create swap-chain");
+    }
 }

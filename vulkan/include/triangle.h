@@ -69,7 +69,7 @@ private:
     };
 
     std::vector<const char*> _deviceExtensions = {
-        "VK_KHR_SWAPCHAIN_EXTENSION_NAME"
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
 
     VkPhysicalDevice _physical_device = VK_NULL_HANDLE;
@@ -78,6 +78,7 @@ private:
     VkQueue _presentQueue;
 
     VkSurfaceKHR _surface;
+    VkSwapchainKHR _swapChain;
 
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;
