@@ -53,6 +53,10 @@ private:
     void createSurface();
 
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR chooseSwapPresentationMode(const std::vector<VkPresentModeKHR>& availableModes);
+    VkExtent2D chooseSwapExt(const VkSurfaceCapabilitiesKHR& capabilities);
+    void createSwapChain();
 
     GLFWwindow* _window;
     VkInstance _instance;

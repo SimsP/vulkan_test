@@ -7,6 +7,8 @@
 #include <iostream>
 #include <optional>
 #include <set>
+#include <cstdint>
+#include <algorithm>
 
 #include "triangle.h"
 
@@ -196,6 +198,7 @@ void HelloTriangleApp::initVulkan() {
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
+    createSwapChain();
 }
 
 void HelloTriangleApp::mainLoop() {
@@ -297,4 +300,66 @@ SwapChainSupportDetails HelloTriangleApp::querySwapChainSupport(VkPhysicalDevice
     }
 
     return details;
+}
+
+VkSurfaceFormatKHR HelloTriangleApp::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+    for (const auto& availableFormat : availableFormats) {
+        if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && 
+            availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            return availableFormat;
+        }
+    }
+    return availableFormats[0];
+}
+
+VkPresentModeKHR HelloTriangleApp::chooseSwapPresentationMode(const std::vector<VkPresentModeKHR>& availableModes) {
+    for (const auto& availableMode : availableModes) {
+        if (availableMode == VK_PRESENT_MODE_MAILBOX_KHR){
+            return availableMode;
+        }
+    }
+    return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+VkExtent2D HelloTriangleApp::chooseSwapExt(const VkSurfaceCapabilitiesKHR& capabilities) {
+    if (capabilities.currentExtent.width != UINT32_MAX) {
+        return capabilities.currentExtent;
+    } else {
+        int width, height;
+        glfwGetFramebufferSize(_window, &width, &height);
+
+        VkExtent2D actualExtent = {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height),
+        };
+
+        actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width,
+                                        capabilities.maxImageExtent.width);
+        actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height,
+                                        capabilities.maxImageExtent.height);
+        return actualExtent;
+    }
+}
+
+void HelloTriangleApp::createSwapChain() {
+    SwapChainSupportDetails detail = querySwapChainSupport(_physical_device);
+    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(detail.formats);
+    VkPresentModeKHR presentMode = chooseSwapPresentationMode(detail.presentModes);
+    VkExtent2D extent = chooseSwapExt(detail.capabilities);
+
+    uint32_t imageCount = detail.capabilities.minImageCount + 1;
+    if (detail.capabilities.maxImageCount > 0 && detail.capabilities.maxImageCount < imageCount) {
+        imageCount = detail.capabilities.maxImageCount;
+    }
+
+    VkSwapchainCreateInfoKHR createInfo {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    createInfo.surface = _surface;
+    createInfo.minImageCount = imageCount;
+    createInfo.imageFormat = surfaceFormat.format;
+    createInfo.imageColorSpace = surfaceFormat.colorSpace;
+    createInfo.imageExtent = extent;
+    createInfo.imageArrayLayers = 1;
+    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
 }
