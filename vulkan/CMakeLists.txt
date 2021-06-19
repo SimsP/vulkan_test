@@ -12,6 +12,29 @@ if(NOT glslc_executable)
 endif()
 
 #TODO implement shader compilation
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/../apps/Debug)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/../apps/Release)
+function(compile_shader target)
+    cmake_parse_arguments(PARSE_ARGV 1 arg "" "ENV;FORMAT" "SOURCES")
+    foreach(source ${arg_SOURCES})
+        add_custom_command(
+            OUTPUT ${source}.${arg_FORMAT}
+           # DEPENDS ${source}
+           # DEPFILE ${source}.d
+            COMMAND
+                ${glslc_executable}
+                $<$<BOOL:${arg_ENV}>:--target-env=${arg_ENV}>
+                $<$<BOOL:${arg_FORMAT}>:-mfmt=${arg_FORMAT}>
+                -o ${PROJECT_BINARY_DIR}/../apps/Debug/${source}.${arg_FORMAT}
+                ${PROJECT_SOURCE_DIR}/shaders/${source}
+        )
+        target_sources(${target} PRIVATE ${source}.${arg_FORMAT})
+    endforeach()
+endfunction()
+
+compile_shader(triangle ENV vulkan FORMAT bin SOURCES shader.vert shader.frag)
+
+
 target_include_directories(triangle PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_directories(triangle PUBLIC "$ENV{VULKAN_SDK}/Lib")
 target_compile_features(triangle PUBLIC cxx_std_20)

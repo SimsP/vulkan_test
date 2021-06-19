@@ -7,8 +7,8 @@
 
 void Renderer::createRenderPipeline() {
     // Create Vertex- and Fragment-Shader modules
-    VkShaderModule vertexShader = loadShader("shaders/vert.spv");
-    VkShaderModule fragmentShader = loadShader("shaders/frag.spv");
+    VkShaderModule vertexShader = loadShader("shader.vert.bin");
+    VkShaderModule fragmentShader = loadShader("shader.frag.bin");
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
