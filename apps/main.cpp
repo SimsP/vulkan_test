@@ -3,12 +3,12 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
-#include "triangle.h"
+#include "application.h"
 
 
 
 int main(int argc, char** argv) {
-    HelloTriangleApp* app = new HelloTriangleApp(800, 600);
+    Application* app = new Application(800, 600);
 
     try {
         app->run();

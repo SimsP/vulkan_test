@@ -4,33 +4,27 @@
 #include<string>
 #include <vector>
 
+#include "application.h"
+
+class Application;
 class Renderer {
 public:
-    Renderer(VkDevice dev, VkExtent2D extent, VkFormat swapChainFormat, std::vector<VkImageView> imageViews)
-             : _device(dev) {
-        _viewport.x = 0.0f;
-        _viewport.y = 0.0f;
-        _viewport.width = static_cast<float>(extent.width);
-        _viewport.height = static_cast<float>(extent.height);
-        _viewport.minDepth = 0.0f;
-        _viewport.maxDepth = 1.0f;
-
-        _scissor.offset = {0, 0};
-        _scissor.extent = extent;
-
-        createRenderPass(swapChainFormat);
-        createRenderPipeline();
-        createFramebuffers(imageViews, extent);
-    }
+    Renderer(Application& app);
 
     ~Renderer() {
         cleanupRenderPipeline();
     }
 
+    void drawFrame();
+
 private:
-    void createRenderPass(VkFormat swapChainFormat);
+    Application& _app;
+    void createRenderPass();
     void createRenderPipeline();
-    void createFramebuffers(std::vector<VkImageView> imageViews, VkExtent2D extent);
+    void createFramebuffers();
+    void createCommandPool();
+    void createCommandBuffers();
+    void createSyncObjects();
     void cleanupRenderPipeline();
     VkShaderModule loadShader(const std::string& fileName);
 
@@ -39,8 +33,18 @@ private:
     VkRect2D _scissor {};
     VkRenderPass _renderPass;
     VkPipelineLayout _pipelineLayout;
-    std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
 
     VkPipeline _renderPipeline;
     std::vector<VkFramebuffer> _swapChainFramebuffers;
+
+    VkCommandPool _commandPool;
+    std::vector<VkCommandBuffer> _commandBuffers;
+
+    std::vector<VkSemaphore> _imgAvailableSem;
+    std::vector<VkSemaphore> _renderFinishedSem;
+    std::vector<VkFence> _inFlightFence;
+    std::vector<VkFence> _imgsInFlight;
+    const int _max_frames_in_flight = 2;
+    size_t _currentFrame = 0;
+
 };
