@@ -36,6 +36,8 @@ public:
         cleanup();
     }
 
+    bool _frameBufferResized = false;
+
 private:
     void initWindow();
     void initVulkan();
@@ -60,7 +62,8 @@ private:
     VkPresentModeKHR chooseSwapPresentationMode(const std::vector<VkPresentModeKHR>& availableModes);
     VkExtent2D chooseSwapExt(const VkSurfaceCapabilitiesKHR& capabilities);
     void createSwapChain();
-
+    void recreateSwapChain();
+    void cleanupSwapChain();
     void createImageViews();
 
     void createRenderPass();
@@ -69,7 +72,6 @@ private:
     void createCommandPool();
     void createCommandBuffers();
     void createSyncObjects();
-    void cleanupRenderPipeline();
     VkShaderModule loadShader(const std::string& fileName);
 
     void drawFrame();
@@ -90,7 +92,6 @@ private:
     std::vector<VkFence> _imgsInFlight;
     const int _max_frames_in_flight = 2;
     size_t _currentFrame = 0;
-
 
     GLFWwindow* _window;
     VkInstance _instance;
