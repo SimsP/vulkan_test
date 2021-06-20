@@ -3,6 +3,7 @@ add_library(triangle src/application.cpp)
 
 find_package(Vulkan REQUIRED COMPONENTS glslc)
 find_package(glfw3 CONFIG REQUIRED)
+find_package(glm REQUIRED)
 
 #find glsl->spir-v compiler
 find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
