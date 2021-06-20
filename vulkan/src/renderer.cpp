@@ -170,7 +170,33 @@ void Renderer::createRenderPipeline() {
     vkDestroyShaderModule(_device, vertexShader, nullptr);
 }
 
+void Renderer::createFramebuffers(std::vector<VkImageView> imageViews, VkExtent2D extent) {
+    _swapChainFramebuffers.resize(imageViews.size());
+
+    for (size_t i = 0; i < imageViews.size(); ++i) {
+        VkImageView attachments[] = {
+            imageViews[i]
+        };
+
+        VkFramebufferCreateInfo frameBufferInfo {};
+        frameBufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        frameBufferInfo.renderPass = _renderPass;
+        frameBufferInfo.attachmentCount = 1;
+        frameBufferInfo.pAttachments = attachments;
+        frameBufferInfo.width = extent.width;
+        frameBufferInfo.height = extent.height;
+        frameBufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(_device, &frameBufferInfo, nullptr, &_swapChainFramebuffers[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create framebuffer");
+        }
+    }
+}
+
 void Renderer::cleanupRenderPipeline() {
+    for (VkFramebuffer framebuffer : _swapChainFramebuffers) {
+        vkDestroyFramebuffer(_device, framebuffer, nullptr);
+    }
     vkDestroyPipeline(_device, _renderPipeline, nullptr);
     vkDestroyPipelineLayout(_device, _pipelineLayout, nullptr);
     vkDestroyRenderPass(_device, _renderPass, nullptr);

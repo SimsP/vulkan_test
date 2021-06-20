@@ -6,7 +6,8 @@
 
 class Renderer {
 public:
-    Renderer(VkDevice dev, VkExtent2D extent, VkFormat swapChainFormat) : _device(dev) {
+    Renderer(VkDevice dev, VkExtent2D extent, VkFormat swapChainFormat, std::vector<VkImageView> imageViews)
+             : _device(dev) {
         _viewport.x = 0.0f;
         _viewport.y = 0.0f;
         _viewport.width = static_cast<float>(extent.width);
@@ -19,6 +20,7 @@ public:
 
         createRenderPass(swapChainFormat);
         createRenderPipeline();
+        createFramebuffers(imageViews, extent);
     }
 
     ~Renderer() {
@@ -28,6 +30,7 @@ public:
 private:
     void createRenderPass(VkFormat swapChainFormat);
     void createRenderPipeline();
+    void createFramebuffers(std::vector<VkImageView> imageViews, VkExtent2D extent);
     void cleanupRenderPipeline();
     VkShaderModule loadShader(const std::string& fileName);
 
@@ -39,4 +42,5 @@ private:
     std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
 
     VkPipeline _renderPipeline;
+    std::vector<VkFramebuffer> _swapChainFramebuffers;
 };
