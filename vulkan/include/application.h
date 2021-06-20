@@ -105,9 +105,12 @@ private:
     void createRenderPipeline();
     void createFramebuffers();
     void createCommandPool();
+    void createVertexBuffer();
     void createCommandBuffers();
     void createSyncObjects();
     VkShaderModule loadShader(const std::string& fileName);
+
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     void drawFrame();
     VkViewport _viewport;
@@ -154,6 +157,9 @@ private:
     VkFormat _swapChainImageFormat;
 
     std::vector<VkImageView> _swapChainImageViews;
+
+    VkBuffer _vertexBuffer;
+    VkDeviceMemory _vertexBufferMemory;
 
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;
