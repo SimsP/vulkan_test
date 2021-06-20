@@ -1,6 +1,5 @@
 project(triangle)
-add_library(triangle src/application.cpp
-                     src/renderer.cpp)
+add_library(triangle src/application.cpp)
 
 find_package(Vulkan REQUIRED COMPONENTS glslc)
 find_package(glfw3 CONFIG REQUIRED)
