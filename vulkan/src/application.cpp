@@ -852,6 +852,7 @@ void Application::recreateSwapChain() {
     }
 
     vkDeviceWaitIdle(_device);
+    cleanupSwapChain();
 
     createSwapChain();
     createImageViews();
