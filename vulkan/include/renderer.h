@@ -34,6 +34,9 @@ private:
     VkDevice _device;
     VkViewport _viewport;
     VkRect2D _scissor {};
+    VkRenderPass _renderPass;
     VkPipelineLayout _pipelineLayout;
     std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
+
+    VkPipeline _renderPipeline;
 };
