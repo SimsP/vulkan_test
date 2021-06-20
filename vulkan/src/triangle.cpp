@@ -202,8 +202,7 @@ void HelloTriangleApp::initVulkan() {
     createLogicalDevice();
     createSwapChain();
     createImageViews();
-    _renderer = new Renderer(_device);
-    _renderer->createRenderPipeline();
+    _renderer = new Renderer(_device, _swapChainExtent);
 }
 
 void HelloTriangleApp::mainLoop() {
