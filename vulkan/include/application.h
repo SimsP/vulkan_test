@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "vk_mem_alloc.h"
+// #include "vk_mem_alloc.h"
 #include <optional>
 #include <array>
 
@@ -55,9 +55,9 @@ const std::vector<uint16_t> indices = {
 };
 
 struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
 };
 
 struct QueueFamilyIndices {
@@ -87,7 +87,7 @@ public:
         cleanup();
     }
 
-    bool _frameBufferResized = false;
+    bool _framebufferResized = false;
 
 private:
     void initWindow();
@@ -110,8 +110,8 @@ private:
 
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-    VkPresentModeKHR chooseSwapPresentationMode(const std::vector<VkPresentModeKHR>& availableModes);
-    VkExtent2D chooseSwapExt(const VkSurfaceCapabilitiesKHR& capabilities);
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availableModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
     void createSwapChain();
     void recreateSwapChain();
     void cleanupSwapChain();
@@ -120,13 +120,13 @@ private:
     void createRenderPass();
     void createDescriptorSetLayout();
     void createRenderPipeline();
-    void createVmaAllocator();
+    // void createVmaAllocator();
     void createFramebuffers();
     void createCommandPool();
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                       VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memUsage, VkMemoryPropertyFlags properties,
-                    VkBuffer& buffer, VmaAllocation& bufferMemory);                      
+    // void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memUsage, VkMemoryPropertyFlags properties,
+    //                 VkBuffer& buffer, VmaAllocation& bufferMemory);                      
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     void createVertexBuffer();
     void createIndexBuffer();
@@ -141,6 +141,10 @@ private:
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     void drawFrame();
+
+    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
     VkViewport _viewport;
     VkRect2D _scissor {};
     VkRenderPass _renderPass;
@@ -190,15 +194,16 @@ private:
     std::vector<VkImageView> _swapChainImageViews;
 
     VkBuffer _vertexBuffer;
-    // VkDeviceMemory _vertexBufferMemory;
-    VmaAllocation _vertexBufferMemory;
+    VkDeviceMemory _vertexBufferMemory;
+    // VmaAllocation _vertexBufferMemory;
     VkBuffer _indexBuffer;
-    VmaAllocation _indexBufferMemory;
+    VkDeviceMemory _indexBufferMemory;
+    // VmaAllocation _indexBufferMemory;
 
     std::vector<VkBuffer> _uniformBuffers;
-    std::vector<VmaAllocation> _uniformBuffersMemory;
+    std::vector<VkDeviceMemory> _uniformBuffersMemory;
 
-    VmaAllocator _vmaAllocator;
+    // VmaAllocator _vmaAllocator;
 
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;
