@@ -222,6 +222,7 @@ void Application::initVulkan() {
     createFramebuffers();
     createCommandPool();
     createVertexBuffer();
+    createIndexBuffer();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -255,6 +256,7 @@ void Application::cleanupSwapChain() {
 void Application::cleanup() {
     cleanupSwapChain();
     vmaDestroyBuffer(_vmaAllocator, _vertexBuffer, _vertexBufferMemory);
+    vmaDestroyBuffer(_vmaAllocator, _indexBuffer, _indexBufferMemory);
     // vmaFreeMemory(_vmaAllocator, _vertexBufferMemory);
     vmaDestroyAllocator(_vmaAllocator);
     // vkDestroyBuffer(_device, _vertexBuffer, nullptr);
@@ -708,8 +710,8 @@ void Application::createCommandBuffers() {
         VkBuffer vertexBuffers[] = {_vertexBuffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(_commandBuffers[i], 0, 1, vertexBuffers, offsets);
-
-        vkCmdDraw(_commandBuffers[i], static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        vkCmdBindIndexBuffer(_commandBuffers[i], _indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdDrawIndexed(_commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
         vkCmdEndRenderPass(_commandBuffers[i]);
 
@@ -843,8 +845,28 @@ void Application::recreateSwapChain() {
     createRenderPass();
     createRenderPipeline();
     createFramebuffers();
-    createVertexBuffer();
     createCommandBuffers();
+}
+
+void Application::createIndexBuffer() {
+    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+    VkBuffer stagingBuffer;
+    VmaAllocation stagingBufferMemory;
+
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+    void* data;
+    vmaMapMemory(_vmaAllocator, stagingBufferMemory, &data);
+    memcpy(data, indices.data(), (size_t) bufferSize);
+    vmaUnmapMemory(_vmaAllocator, stagingBufferMemory);
+
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                 VMA_MEMORY_USAGE_GPU_ONLY, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _indexBuffer, _indexBufferMemory);
+    
+    copyBuffer(stagingBuffer, _indexBuffer, bufferSize);
+
+    vmaDestroyBuffer(_vmaAllocator, stagingBuffer, stagingBufferMemory);
 }
 
 void Application::createVertexBuffer() {
