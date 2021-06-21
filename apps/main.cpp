@@ -8,7 +8,7 @@
 
 
 int main(int argc, char** argv) {
-    Application* app = new Application(800, 600);
+    Application* app = new Application(1280, 720);
 
     try {
         app->run();

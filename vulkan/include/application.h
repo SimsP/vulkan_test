@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include "vk_mem_alloc.h"
 #include <optional>
 #include <array>
 
@@ -106,10 +107,13 @@ private:
 
     void createRenderPass();
     void createRenderPipeline();
+    void createVmaAllocator();
     void createFramebuffers();
     void createCommandPool();
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                       VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memUsage, VkMemoryPropertyFlags properties,
+                    VkBuffer& buffer, VmaAllocation& bufferMemory);                      
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     void createVertexBuffer();
     void createCommandBuffers();
@@ -165,7 +169,10 @@ private:
     std::vector<VkImageView> _swapChainImageViews;
 
     VkBuffer _vertexBuffer;
-    VkDeviceMemory _vertexBufferMemory;
+    // VkDeviceMemory _vertexBufferMemory;
+    VmaAllocation _vertexBufferMemory;
+
+    VmaAllocator _vmaAllocator;
 
 #ifdef NDEBUG
     const bool _enableValidationLayers = false;

@@ -1,5 +1,5 @@
 #define GLFW_INCLUDE_VULKAN
-
+#define VMA_IMPLEMENTATION
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <cstdlib>
@@ -218,6 +218,7 @@ void Application::initVulkan() {
     
     createRenderPass();
     createRenderPipeline();
+    createVmaAllocator();
     createFramebuffers();
     createCommandPool();
     createVertexBuffer();
@@ -234,8 +235,8 @@ void Application::mainLoop() {
 
 
 void Application::cleanupSwapChain() {
-    for (size_t i = 0; i < _swapChainFramebuffers.size(); ++i) {
-        vkDestroyFramebuffer(_device, _swapChainFramebuffers[i], nullptr);   
+    for (auto framebuffer : _swapChainFramebuffers) {
+        vkDestroyFramebuffer(_device, framebuffer, nullptr);
     }
 
     vkFreeCommandBuffers(_device, _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
@@ -244,8 +245,8 @@ void Application::cleanupSwapChain() {
     vkDestroyPipelineLayout(_device, _pipelineLayout, nullptr);
     vkDestroyRenderPass(_device, _renderPass, nullptr);
 
-    for (size_t i = 0; i < _swapChainImageViews.size(); ++i) {
-        vkDestroyImageView(_device, _swapChainImageViews[i], nullptr);
+    for (auto imageView : _swapChainImageViews) {
+        vkDestroyImageView(_device, imageView, nullptr);
     }
 
     vkDestroySwapchainKHR(_device, _swapChain, nullptr);
@@ -253,8 +254,11 @@ void Application::cleanupSwapChain() {
 
 void Application::cleanup() {
     cleanupSwapChain();
-    vkDestroyBuffer(_device, _vertexBuffer, nullptr);
-    vkFreeMemory(_device, _vertexBufferMemory, nullptr);
+    vmaDestroyBuffer(_vmaAllocator, _vertexBuffer, _vertexBufferMemory);
+    // vmaFreeMemory(_vmaAllocator, _vertexBufferMemory);
+    vmaDestroyAllocator(_vmaAllocator);
+    // vkDestroyBuffer(_device, _vertexBuffer, nullptr);
+    // vkFreeMemory(_device, _vertexBufferMemory, nullptr);
     for (size_t i = 0; i < _max_frames_in_flight; ++i) {
         vkDestroySemaphore(_device, _renderFinishedSem[i], nullptr);
         vkDestroySemaphore(_device, _imgAvailableSem[i], nullptr);
@@ -847,23 +851,29 @@ void Application::createVertexBuffer() {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
     VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
+    VmaAllocation stagingBufferMemory;
     
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, 
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 stagingBuffer, stagingBufferMemory);
+    // createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+    //              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
     void* data;
-    vkMapMemory(_device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    vmaMapMemory(_vmaAllocator, stagingBufferMemory, &data);
     memcpy(data, vertices.data(), (size_t) bufferSize);
-    vkUnmapMemory(_device, stagingBufferMemory);
+    vmaUnmapMemory(_vmaAllocator, stagingBufferMemory);
 
     createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _vertexBuffer, _vertexBufferMemory);
+                 VMA_MEMORY_USAGE_GPU_ONLY, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _vertexBuffer, _vertexBufferMemory);
+    // createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+    //              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _vertexBuffer, _vertexBufferMemory);
     
     copyBuffer(stagingBuffer, _vertexBuffer, bufferSize);
 
-    vkDestroyBuffer(_device, stagingBuffer, nullptr);
-    vkFreeMemory(_device, stagingBufferMemory, nullptr);
+    vmaDestroyBuffer(_vmaAllocator, stagingBuffer, stagingBufferMemory);
+    // vmaFreeMemory(_vmaAllocator, stagingBufferMemory);
+    // vkFreeMemory(_device, stagingBufferMemory, nullptr);
 }
 
 uint32_t Application::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
@@ -891,6 +901,7 @@ void Application::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMe
         throw std::runtime_error("failed to create buffer!");
     }
 
+
     VkMemoryRequirements memRequirements{};
     vkGetBufferMemoryRequirements(_device, buffer, &memRequirements);
 
@@ -903,6 +914,33 @@ void Application::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMe
     }
     vkBindBufferMemory(_device, buffer, bufferMemory, 0);
 }
+
+void Application::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memUsage, VkMemoryPropertyFlags properties,
+                               VkBuffer& buffer, VmaAllocation& bufferMemory) {
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    // VkMemoryRequirements memRequirements{};
+    // vkGetBufferMemoryRequirements(_device, buffer, &memRequirements);
+
+    // VkMemoryAllocateInfo allocInfo{};
+    // allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    // allocInfo.allocationSize = memRequirements.size;
+    // allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+    // if (vkAllocateMemory(_device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+    //     throw std::runtime_error("failed to allocate buffer memory");
+    // }
+    // vkBindBufferMemory(_device, buffer, bufferMemory, 0);
+
+    VmaAllocationCreateInfo allocInfo{};
+    allocInfo.usage = memUsage;
+    allocInfo.preferredFlags = properties;
+    vmaCreateBuffer(_vmaAllocator, &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr);
+}
+
 
 void Application::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
     VkCommandBufferAllocateInfo allocInfo{};
@@ -933,4 +971,14 @@ void Application::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSiz
     vkQueueSubmit(_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
     vkQueueWaitIdle(_graphicsQueue);
     vkFreeCommandBuffers(_device, _commandPool, 1, &commandBuffer);
+}
+
+void Application::createVmaAllocator() {
+    VmaAllocatorCreateInfo createInfo{};
+    createInfo.vulkanApiVersion = VK_API_VERSION_1_0;
+    createInfo.physicalDevice = _physical_device;
+    createInfo.device = _device;
+    createInfo.instance = _instance;
+
+    vmaCreateAllocator(&createInfo, &_vmaAllocator);
 }
