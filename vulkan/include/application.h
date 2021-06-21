@@ -44,14 +44,20 @@ struct Vertex {
 };
 
 const std::vector<Vertex> vertices = {
-    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
     {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 };
 
 const std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0
+};
+
+struct UniformBufferObject {
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
 };
 
 struct QueueFamilyIndices {
@@ -112,6 +118,7 @@ private:
     void createImageViews();
 
     void createRenderPass();
+    void createDescriptorSetLayout();
     void createRenderPipeline();
     void createVmaAllocator();
     void createFramebuffers();
@@ -123,6 +130,10 @@ private:
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     void createVertexBuffer();
     void createIndexBuffer();
+    void createUniformBuffers();
+    void updateUniformBuffer(uint32_t currentImage);
+    void createDescriptorPool();
+    void createDescriptorSets();
     void createCommandBuffers();
     void createSyncObjects();
     VkShaderModule loadShader(const std::string& fileName);
@@ -133,6 +144,9 @@ private:
     VkViewport _viewport;
     VkRect2D _scissor {};
     VkRenderPass _renderPass;
+    VkDescriptorSetLayout _descriptorSetLayout;
+    VkDescriptorPool _descriptorPool;
+    std::vector<VkDescriptorSet> _descriptorSets;
     VkPipelineLayout _pipelineLayout;
 
     VkPipeline _renderPipeline;
@@ -180,6 +194,9 @@ private:
     VmaAllocation _vertexBufferMemory;
     VkBuffer _indexBuffer;
     VmaAllocation _indexBufferMemory;
+
+    std::vector<VkBuffer> _uniformBuffers;
+    std::vector<VmaAllocation> _uniformBuffersMemory;
 
     VmaAllocator _vmaAllocator;
 
