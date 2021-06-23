@@ -129,6 +129,8 @@ private:
     // void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memUsage, VkMemoryPropertyFlags properties,
     //                 VkBuffer& buffer, VmaAllocation& bufferMemory);                      
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     void createTextureImage();
     void createVertexBuffer();
     void createIndexBuffer();
@@ -138,6 +140,9 @@ private:
     void createDescriptorSets();
     void createCommandBuffers();
     void createSyncObjects();
+
+    void transitionImageLayout(VkImage img, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void copyBufferToImage(VkBuffer buffer, VkImage img, uint32_t width, uint32_t height);
     VkShaderModule loadShader(const std::string& fileName);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
