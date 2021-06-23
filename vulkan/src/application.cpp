@@ -65,6 +65,8 @@ void Application::initVulkan() {
     createFramebuffers();
     createCommandPool();
     createTextureImage();
+    createTextureImageView();
+    createTextureSampler();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
