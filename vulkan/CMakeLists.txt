@@ -4,6 +4,7 @@ add_library(triangle src/application.cpp)
 find_package(Vulkan REQUIRED COMPONENTS glslc)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm REQUIRED)
+find_path (STB_INCLUDE_DIRS "stb.h")
 #find_package(unofficial-vulkan-memory-allocator CONFIG REQUIRED)
 
 #find glsl->spir-v compiler
@@ -36,7 +37,7 @@ endfunction()
 compile_shader(triangle ENV vulkan FORMAT bin SOURCES shader.vert shader.frag)
 
 
-target_include_directories(triangle PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_include_directories(triangle PUBLIC "${PROJECT_SOURCE_DIR}/include" "${STB_INCLUDE_DIRS}")
 target_link_directories(triangle PUBLIC "$ENV{VULKAN_SDK}/Lib")
 target_compile_features(triangle PUBLIC cxx_std_20)
 target_link_libraries(triangle PUBLIC glfw vulkan-1) #unofficial::vulkan-memory-allocator::vulkan-memory-allocator)

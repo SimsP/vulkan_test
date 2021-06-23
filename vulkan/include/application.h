@@ -1,7 +1,8 @@
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
-
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
@@ -128,6 +129,7 @@ private:
     // void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memUsage, VkMemoryPropertyFlags properties,
     //                 VkBuffer& buffer, VmaAllocation& bufferMemory);                      
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    void createTextureImage();
     void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffers();
@@ -139,7 +141,8 @@ private:
     VkShaderModule loadShader(const std::string& fileName);
 
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+                      VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
     void drawFrame();
 
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -210,5 +213,8 @@ private:
 #else
     const bool _enableValidationLayers = true;
 #endif;
+
+    VkImage _textureImage;
+    VkDeviceMemory _textureImageMemory;
 
 };
