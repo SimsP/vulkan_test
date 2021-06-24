@@ -87,6 +87,9 @@ void Application::mainLoop() {
 }
 
 void Application::cleanupSwapChain() {
+    vkDestroyImageView(_device, _depthImageView, nullptr);
+    vkDestroyImage(_device, _depthImage, nullptr);
+    vkFreeMemory(_device, _depthImageMemory, nullptr);
     for (auto framebuffer : _swapChainFramebuffers) {
         vkDestroyFramebuffer(_device, framebuffer, nullptr);
     }
@@ -164,6 +167,7 @@ void Application::recreateSwapChain() {
     createImageViews();
     createRenderPass();
     createRenderPipeline();
+    createDepthResources();
     createFramebuffers();
     createUniformBuffers();
     createDescriptorPool();
