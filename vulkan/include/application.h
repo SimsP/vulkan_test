@@ -88,7 +88,8 @@ struct SwapChainSupportDetails {
 
 class Application {
 public:
-    Application(uint32_t width, uint32_t height) : _width(width), _height(height) {}
+    Application(uint32_t width, uint32_t height, const std::string model_path, std::string texture_path) 
+            : _width(width), _height(height), _model_path(model_path), _texture_path(texture_path) {}
     ~Application(){}
     
     void run() {
@@ -194,8 +195,10 @@ private:
     GLFWwindow* _window;
     VkInstance _instance;
     VkDebugUtilsMessengerEXT _debugMessenger;
-    uint32_t  _width = 800;
-    uint32_t _height = 600;
+    uint32_t  _width = 1920;
+    uint32_t _height = 1080;
+    const std::string _model_path;
+    const std::string _texture_path;
 
     std::vector<const char*> _validationLayers = {
         "VK_LAYER_KHRONOS_validation"
